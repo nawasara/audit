@@ -1,19 +1,20 @@
 <div>
-    {{-- Filters --}}
-    <div class="mb-4 flex flex-col sm:flex-row gap-3">
-        <div class="flex-1">
-            <x-nawasara-ui::form.input type="text" placeholder="Cari user, model, deskripsi..."
-                wire:model.live.debounce.300ms="search" />
-        </div>
-        <div class="w-full sm:w-48">
-            <x-nawasara-ui::form.select wire:model.live="eventFilter">
-                <option value="">Semua Aksi</option>
-                <option value="created">Created</option>
-                <option value="updated">Updated</option>
-                <option value="deleted">Deleted</option>
-            </x-nawasara-ui::form.select>
-        </div>
-    </div>
+    <x-nawasara-ui::filter-bar searchPlaceholder="Cari user, model, deskripsi..." searchModel="search">
+        <x-nawasara-ui::filter-dropdown
+            label="Aksi"
+            model="eventFilter"
+            :items="['all' => 'Semua Aksi', 'created' => 'Created', 'updated' => 'Updated', 'deleted' => 'Deleted']" />
+
+        {{-- Active chips --}}
+        <x-slot:chips>
+            @if ($eventFilter)
+                <x-nawasara-ui::filter-chip label="Aksi: {{ ucfirst($eventFilter) }}" model="eventFilter" />
+            @endif
+            @if ($search)
+                <x-nawasara-ui::filter-chip label="Cari: {{ $search }}" model="search" />
+            @endif
+        </x-slot:chips>
+    </x-nawasara-ui::filter-bar>
 
     <x-nawasara-ui::table :headers="['#', 'User', 'Model', 'Aksi', 'Deskripsi', 'Tanggal']" title="Activity Log">
         <x-slot:table>
@@ -48,8 +49,7 @@
                         {{ $item->description ?? '-' }}
                         @if($item->properties && $item->properties->has('old'))
                             <button type="button"
-                                x-data
-                                x-on:click="$dispatch('open-detail', { id: {{ $item->id }} })"
+                                x-data x-on:click="$dispatch('open-detail', { id: {{ $item->id }} })"
                                 class="ml-1 text-blue-600 hover:underline text-xs">
                                 detail
                             </button>
