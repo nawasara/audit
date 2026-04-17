@@ -15,7 +15,6 @@ class Table extends Component
     public string $eventFilter = '';
 
     // Detail modal
-    public bool $showDetail = false;
     public ?array $detailData = null;
 
     public function updatedSearch()
@@ -61,12 +60,12 @@ class Table extends Component
             'date' => $activity->created_at->format('d M Y H:i:s'),
         ];
 
-        $this->showDetail = true;
+        $this->dispatch('modal-open:audit-detail');
     }
 
     public function closeDetail()
     {
-        $this->showDetail = false;
+        $this->dispatch('modal-close:audit-detail');
         $this->detailData = null;
     }
 

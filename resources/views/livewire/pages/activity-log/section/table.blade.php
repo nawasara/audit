@@ -48,6 +48,7 @@
                         {{ $item->description ?? '-' }}
                         @if($item->properties && ($item->properties->has('old') || $item->properties->has('attributes')))
                             <button type="button" wire:click="openDetail({{ $item->id }})"
+                                @click="$dispatch('open-modal', {id: 'audit-detail', loading: true})"
                                 class="ml-1 text-blue-600 hover:underline text-xs">
                                 detail
                             </button>
@@ -72,7 +73,7 @@
     </x-nawasara-ui::table>
 
     {{-- Detail Modal --}}
-    <x-nawasara-ui::modal wire:model="showDetail" maxWidth="2xl" title="Detail Perubahan"
+    <x-nawasara-ui::modal id="audit-detail" maxWidth="2xl" title="Detail Perubahan"
         :subtitle="$detailData ? $detailData['model'].'#'.$detailData['model_id'].' — '.$detailData['description'] : null">
         @if ($detailData)
             <div class="grid grid-cols-2 gap-4 mb-4 text-sm">
