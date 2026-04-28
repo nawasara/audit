@@ -1,8 +1,27 @@
 {
     "name": "nawasara/audit",
-    "description": "Audit trail, activity logging, and login tracking for Nawasara",
+    "description": "Audit trail, activity logging, and login attempt tracking for the Nawasara superapp framework.",
     "type": "library",
     "license": "MIT",
+    "keywords": [
+        "nawasara",
+        "laravel",
+        "audit",
+        "activity-log",
+        "login-history",
+        "compliance"
+    ],
+    "authors": [
+        {
+            "name": "Pringgo J. Saputro",
+            "email": "odyinggo@gmail.com",
+            "role": "Lead Developer"
+        }
+    ],
+    "support": {
+        "issues": "https://github.com/nawasara/audit/issues",
+        "source": "https://github.com/nawasara/audit"
+    },
     "autoload": {
         "psr-4": {
             "Nawasara\\Audit\\": "src/"
@@ -21,5 +40,7 @@
                 "Nawasara\\Audit\\AuditServiceProvider"
             ]
         }
-    }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
 }
