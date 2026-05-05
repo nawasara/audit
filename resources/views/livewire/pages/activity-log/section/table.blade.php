@@ -46,12 +46,13 @@
                     </td>
                     <td class="px-6 py-4 text-sm text-gray-800 dark:text-neutral-200 max-w-xs truncate">
                         {{ $item->description ?? '-' }}
-                        @if($item->properties && ($item->properties->has('old') || $item->properties->has('attributes')))
-                            <button type="button" wire:click="openDetail({{ $item->id }})"
+                        @if ($item->properties && ($item->properties->has('old') || $item->properties->has('attributes')))
+                            <x-nawasara-ui::button variant="link" color="primary" size="sm"
+                                wire:click="openDetail({{ $item->id }})"
                                 @click="$dispatch('open-modal', {id: 'audit-detail', loading: true})"
-                                class="ml-1 text-blue-600 hover:underline text-xs">
+                                class="ml-1 text-xs">
                                 detail
-                            </button>
+                            </x-nawasara-ui::button>
                         @endif
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800 dark:text-neutral-200">
@@ -123,7 +124,9 @@
             @endif
 
             <x-slot:footer>
-                <button wire:click="closeDetail" class="py-2 px-4 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 hover:bg-gray-50 dark:bg-neutral-800 dark:border-neutral-700 dark:text-white">Tutup</button>
+                <x-nawasara-ui::button color="neutral" variant="outline" wire:click="closeDetail">
+                    Tutup
+                </x-nawasara-ui::button>
             </x-slot:footer>
         @endif
     </x-nawasara-ui::modal>
