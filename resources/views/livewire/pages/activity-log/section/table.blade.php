@@ -61,12 +61,12 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="6" class="px-6 py-12 text-center">
-                        <div class="inline-flex items-center justify-center size-12 rounded-2xl bg-gray-100 dark:bg-neutral-800 mb-3">
-                            <x-lucide-history class="size-6 text-gray-400 dark:text-neutral-500" />
-                        </div>
-                        <p class="text-sm font-semibold text-gray-700 dark:text-neutral-300">Belum ada activity log</p>
-                        <p class="mt-1 text-xs text-gray-500 dark:text-neutral-400">Aktivitas user akan otomatis ter-log di sini.</p>
+                    <td colspan="6">
+                        <x-nawasara-ui::empty-state
+                            icon="lucide-history"
+                            title="Belum ada activity log"
+                            description="Aktivitas user akan otomatis ter-log di sini."
+                            inline />
                     </td>
                 </tr>
             @endforelse
