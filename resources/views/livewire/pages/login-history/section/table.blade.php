@@ -4,15 +4,23 @@
         $methodOptions = ['local' => 'Local', 'sso' => 'SSO'];
     @endphp
 
-    {{-- Toolbar — time-window + 2 filters (Status + Metode) + search + export.
-         All inline in one row so the visual hierarchy reads as a single
-         control surface. Default time window is 7 days, keeping the initial
-         query bounded for login-attempt tables that grow very large. --}}
+    {{-- Page header — title on the left with a count badge, time-window
+         on the right. Login history is read-only so there's no primary
+         "+ Tambah" button, but the action zone slot is ready for one.
+         Title is rendered HERE (not in index.blade.php) so it can share
+         a row with the time-window component's reactive state. --}}
+    <x-nawasara-ui::page-header
+        title="Login History"
+        :count="$this->items->total().' attempts'">
+        <x-nawasara-ui::time-window :window="$window" :from="$from" :to="$to" />
+    </x-nawasara-ui::page-header>
+
+    {{-- Toolbar — filter (Status + Metode) + search + export. Time-window
+         lifted into the page header above so this row is purely about
+         narrowing within the active period. --}}
     <div class="space-y-2 mb-4">
         <div class="flex flex-col md:flex-row md:flex-nowrap md:items-center gap-2">
             <div class="flex flex-wrap items-center gap-2 shrink-0">
-                <x-nawasara-ui::time-window :window="$window" :from="$from" :to="$to" />
-
                 <x-nawasara-ui::filter-panel
                     label="Filter"
                     :state="['statusFilter' => $statusFilter, 'methodFilter' => $methodFilter]"
@@ -49,10 +57,11 @@
         @endif
     </div>
 
-    {{-- No stickyLast: read-only audit log, no action column. --}}
+    {{-- No stickyLast: read-only audit log, no action column.
+         Title moved to the <x-page-header> above; here we omit it so
+         the table card focuses on data without restating the page name. --}}
     <x-nawasara-ui::table
-        :headers="['#', 'User', 'Username', 'Status', 'Metode', 'IP Address', 'User Agent', 'Waktu']"
-        :title="'Login History ('.$this->items->total().' attempts)'">
+        :headers="['#', 'User', 'Username', 'Status', 'Metode', 'IP Address', 'User Agent', 'Waktu']">
         <x-slot:table>
             @forelse ($this->items as $item)
                 <tr wire:key="login-{{ $item->id }}">

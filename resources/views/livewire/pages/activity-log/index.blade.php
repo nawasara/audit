@@ -5,8 +5,8 @@
     </x-slot>
 
     <x-nawasara-ui::page.container>
-        <x-nawasara-ui::page.title>Activity Log</x-nawasara-ui::page.title>
-
+        {{-- Title moved into the section table component (alongside the
+             time-window selector). Index just hosts breadcrumb + section. --}}
         @livewire('nawasara-audit.activity-log.section.table')
     </x-nawasara-ui::page.container>
 </div>

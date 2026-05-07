@@ -7,14 +7,21 @@
         ];
     @endphp
 
-    {{-- Toolbar — time-window + Aksi filter + search + export inline.
-         Default 7 days bounds the initial query so users don't accidentally
-         scan the entire activity history on first load. --}}
+    {{-- Page header — title left with count badge, time-window right.
+         Title moved here from index.blade.php so it shares a row with
+         the time-window's reactive state. --}}
+    <x-nawasara-ui::page-header
+        title="Activity Log"
+        :count="$this->items->total().' entries'">
+        <x-nawasara-ui::time-window :window="$window" :from="$from" :to="$to" />
+    </x-nawasara-ui::page-header>
+
+    {{-- Toolbar — Aksi filter + search + export. Time window lifted into
+         the page header above; this row is purely about narrowing within
+         the active period. --}}
     <div class="space-y-2 mb-4">
         <div class="flex flex-col md:flex-row md:flex-nowrap md:items-center gap-2">
             <div class="flex flex-wrap items-center gap-2 shrink-0">
-                <x-nawasara-ui::time-window :window="$window" :from="$from" :to="$to" />
-
                 <x-nawasara-ui::filter-panel
                     label="Filter"
                     :state="['eventFilter' => $eventFilter]"
@@ -52,10 +59,10 @@
         @endif
     </div>
 
-    {{-- No stickyLast: activity-log is read-only, no action column to pin. --}}
+    {{-- No stickyLast: activity-log is read-only, no action column to pin.
+         Title omitted; <x-page-header> renders it above. --}}
     <x-nawasara-ui::table
-        :headers="['#', 'User', 'Model', 'Aksi', 'Deskripsi', 'Tanggal']"
-        :title="'Activity Log ('.$this->items->total().' entries)'">
+        :headers="['#', 'User', 'Model', 'Aksi', 'Deskripsi', 'Tanggal']">
         <x-slot:table>
             @forelse ($this->items as $item)
                 <tr wire:key="activity-{{ $item->id }}">
