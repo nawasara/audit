@@ -1,32 +1,56 @@
 <div>
-    <x-nawasara-ui::filter-bar searchPlaceholder="Cari username, IP address..." searchModel="search">
-        <x-nawasara-ui::filter-dropdown
-            label="Status"
-            model="statusFilter"
-            :items="['all' => 'Semua Status', 'success' => 'Success', 'failed' => 'Failed']" />
-        <x-nawasara-ui::filter-dropdown
-            label="Metode"
-            model="methodFilter"
-            :items="['all' => 'Semua Metode', 'local' => 'Local', 'sso' => 'SSO']" />
+    @php
+        $statusOptions = ['success' => 'Success', 'failed' => 'Failed'];
+        $methodOptions = ['local' => 'Local', 'sso' => 'SSO'];
+    @endphp
 
-        {{-- Active chips --}}
-        <x-slot:chips>
-            @if ($statusFilter)
-                <x-nawasara-ui::filter-chip label="Status: {{ ucfirst($statusFilter) }}" model="statusFilter" />
-            @endif
-            @if ($methodFilter)
-                <x-nawasara-ui::filter-chip label="Metode: {{ ucfirst($methodFilter) }}" model="methodFilter" />
-            @endif
-            @if ($search)
+    {{-- Toolbar — 2 filters (Status + Metode) + search + export. --}}
+    <div class="space-y-2 mb-4">
+        <div class="flex flex-col md:flex-row md:flex-nowrap md:items-center gap-2">
+            <div class="flex flex-wrap items-center gap-2 shrink-0">
+                <x-nawasara-ui::filter-panel
+                    label="Filter"
+                    :state="['statusFilter' => $statusFilter, 'methodFilter' => $methodFilter]"
+                    :multiple="['statusFilter', 'methodFilter']"
+                    :labels="['statusFilter' => $statusOptions, 'methodFilter' => $methodOptions]"
+                    :dimensions="['statusFilter' => 'Status', 'methodFilter' => 'Metode']">
+                    <x-nawasara-ui::filter-group label="Status" model="statusFilter" :items="$statusOptions" icon="lucide-shield-check" />
+                    <x-nawasara-ui::filter-group label="Metode" model="methodFilter" :items="$methodOptions" icon="lucide-key-round" />
+                </x-nawasara-ui::filter-panel>
+            </div>
+
+            <div class="relative w-full md:flex-1 md:min-w-0">
+                <div class="absolute inset-y-0 start-0 flex items-center pointer-events-none ps-3.5">
+                    <x-lucide-search class="shrink-0 size-4 text-gray-400 dark:text-neutral-500" />
+                </div>
+                <input type="text" wire:model.live.debounce.300ms="search"
+                    placeholder="Cari username atau IP address..."
+                    class="h-10 ps-10 pe-4 block w-full border border-gray-200 rounded-lg text-sm focus:border-emerald-600 focus:ring-emerald-600 dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-200 dark:placeholder-neutral-500 dark:focus:ring-neutral-600" />
+            </div>
+
+            <div class="flex items-center gap-2 shrink-0">
+                <x-nawasara-ui::export-button
+                    action="export"
+                    tooltip="Ekspor login history (max 10rb baris)" />
+            </div>
+        </div>
+
+        <div wire:ignore data-filter-chips></div>
+
+        @if ($search)
+            <div class="flex flex-wrap items-center gap-2">
                 <x-nawasara-ui::filter-chip label="Cari: {{ $search }}" model="search" />
-            @endif
-        </x-slot:chips>
-    </x-nawasara-ui::filter-bar>
+            </div>
+        @endif
+    </div>
 
-    <x-nawasara-ui::table :headers="['#', 'User', 'Username', 'Status', 'Metode', 'IP Address', 'User Agent', 'Waktu']" title="Login History">
+    {{-- No stickyLast: read-only audit log, no action column. --}}
+    <x-nawasara-ui::table
+        :headers="['#', 'User', 'Username', 'Status', 'Metode', 'IP Address', 'User Agent', 'Waktu']"
+        :title="'Login History ('.$this->items->total().' attempts)'">
         <x-slot:table>
             @forelse ($this->items as $item)
-                <tr>
+                <tr wire:key="login-{{ $item->id }}">
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-neutral-400">
                         {{ $item->id }}
                     </td>
@@ -63,11 +87,20 @@
             @empty
                 <tr>
                     <td colspan="8">
-                        <x-nawasara-ui::empty-state
-                            icon="lucide-log-in"
-                            title="Belum ada riwayat login"
-                            description="Setiap login user akan ter-record otomatis di sini."
-                            inline />
+                        @if ($search || ! empty($statusFilter) || ! empty($methodFilter))
+                            <x-nawasara-ui::empty-state
+                                icon="lucide-search-x"
+                                title="Tidak ada riwayat yang cocok"
+                                description="Coba ubah filter atau hapus search keyword."
+                                variant="filter"
+                                inline />
+                        @else
+                            <x-nawasara-ui::empty-state
+                                icon="lucide-log-in"
+                                title="Belum ada riwayat login"
+                                description="Setiap login user akan ter-record otomatis di sini."
+                                inline />
+                        @endif
                     </td>
                 </tr>
             @endforelse

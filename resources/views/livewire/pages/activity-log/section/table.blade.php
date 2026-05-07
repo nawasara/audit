@@ -1,24 +1,60 @@
 <div>
-    <x-nawasara-ui::filter-bar searchPlaceholder="Cari user, model, deskripsi..." searchModel="search">
-        <x-nawasara-ui::filter-dropdown
-            label="Aksi"
-            model="eventFilter"
-            :items="['all' => 'Semua Aksi', 'created' => 'Created', 'updated' => 'Updated', 'deleted' => 'Deleted']" />
+    @php
+        $eventOptions = [
+            'created' => 'Created',
+            'updated' => 'Updated',
+            'deleted' => 'Deleted',
+        ];
+    @endphp
 
-        <x-slot:chips>
-            @if ($eventFilter)
-                <x-nawasara-ui::filter-chip label="Aksi: {{ ucfirst($eventFilter) }}" model="eventFilter" />
-            @endif
-            @if ($search)
+    {{-- Toolbar — single filter (Aksi/event) + search + export. --}}
+    <div class="space-y-2 mb-4">
+        <div class="flex flex-col md:flex-row md:flex-nowrap md:items-center gap-2">
+            <div class="flex flex-wrap items-center gap-2 shrink-0">
+                <x-nawasara-ui::filter-panel
+                    label="Filter"
+                    :state="['eventFilter' => $eventFilter]"
+                    :multiple="['eventFilter']"
+                    :labels="['eventFilter' => $eventOptions]">
+                    <x-nawasara-ui::filter-group label="Aksi" model="eventFilter" :items="$eventOptions" icon="lucide-zap" />
+                </x-nawasara-ui::filter-panel>
+            </div>
+
+            {{-- Search zone — fills available space. --}}
+            <div class="relative w-full md:flex-1 md:min-w-0">
+                <div class="absolute inset-y-0 start-0 flex items-center pointer-events-none ps-3.5">
+                    <x-lucide-search class="shrink-0 size-4 text-gray-400 dark:text-neutral-500" />
+                </div>
+                <input type="text" wire:model.live.debounce.300ms="search"
+                    placeholder="Cari user, model, atau deskripsi..."
+                    class="h-10 ps-10 pe-4 block w-full border border-gray-200 rounded-lg text-sm focus:border-emerald-600 focus:ring-emerald-600 dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-200 dark:placeholder-neutral-500 dark:focus:ring-neutral-600" />
+            </div>
+
+            <div class="flex items-center gap-2 shrink-0">
+                <x-nawasara-ui::export-button
+                    action="export"
+                    tooltip="Ekspor activity log (max 10rb baris)" />
+            </div>
+        </div>
+
+        {{-- Filter chips teleport target. wire:ignore so Livewire morph
+             leaves Alpine-managed chip DOM alone after each filter apply. --}}
+        <div wire:ignore data-filter-chips></div>
+
+        @if ($search)
+            <div class="flex flex-wrap items-center gap-2">
                 <x-nawasara-ui::filter-chip label="Cari: {{ $search }}" model="search" />
-            @endif
-        </x-slot:chips>
-    </x-nawasara-ui::filter-bar>
+            </div>
+        @endif
+    </div>
 
-    <x-nawasara-ui::table :headers="['#', 'User', 'Model', 'Aksi', 'Deskripsi', 'Tanggal']" title="Activity Log">
+    {{-- No stickyLast: activity-log is read-only, no action column to pin. --}}
+    <x-nawasara-ui::table
+        :headers="['#', 'User', 'Model', 'Aksi', 'Deskripsi', 'Tanggal']"
+        :title="'Activity Log ('.$this->items->total().' entries)'">
         <x-slot:table>
             @forelse ($this->items as $item)
-                <tr>
+                <tr wire:key="activity-{{ $item->id }}">
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-neutral-400">
                         {{ $item->id }}
                     </td>
@@ -62,11 +98,20 @@
             @empty
                 <tr>
                     <td colspan="6">
-                        <x-nawasara-ui::empty-state
-                            icon="lucide-history"
-                            title="Belum ada activity log"
-                            description="Aktivitas user akan otomatis ter-log di sini."
-                            inline />
+                        @if ($search || ! empty($eventFilter))
+                            <x-nawasara-ui::empty-state
+                                icon="lucide-search-x"
+                                title="Tidak ada activity yang cocok"
+                                description="Coba ubah filter atau hapus search keyword."
+                                variant="filter"
+                                inline />
+                        @else
+                            <x-nawasara-ui::empty-state
+                                icon="lucide-history"
+                                title="Belum ada activity log"
+                                description="Aktivitas user akan otomatis ter-log di sini."
+                                inline />
+                        @endif
                     </td>
                 </tr>
             @endforelse
