@@ -7,17 +7,14 @@
         ];
     @endphp
 
-    {{-- Time-window selector row — segmented preset (Hari ini/7d/30d/Custom).
-         Sits above the main toolbar so it reads as a primary scope, not a
-         secondary filter. Default 7 days keeps initial query bounded. --}}
-    <div class="mb-3">
-        <x-nawasara-ui::time-window :window="$window" :from="$from" :to="$to" />
-    </div>
-
-    {{-- Toolbar — single filter (Aksi/event) + search + export. --}}
+    {{-- Toolbar — time-window + Aksi filter + search + export inline.
+         Default 7 days bounds the initial query so users don't accidentally
+         scan the entire activity history on first load. --}}
     <div class="space-y-2 mb-4">
         <div class="flex flex-col md:flex-row md:flex-nowrap md:items-center gap-2">
             <div class="flex flex-wrap items-center gap-2 shrink-0">
+                <x-nawasara-ui::time-window :window="$window" :from="$from" :to="$to" />
+
                 <x-nawasara-ui::filter-panel
                     label="Filter"
                     :state="['eventFilter' => $eventFilter]"

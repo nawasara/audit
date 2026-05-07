@@ -4,17 +4,15 @@
         $methodOptions = ['local' => 'Local', 'sso' => 'SSO'];
     @endphp
 
-    {{-- Time-window selector row — segmented preset (Hari ini/7d/30d/Custom).
-         Default 7 days keeps initial query bounded — login attempts can grow
-         very large in active orgs. --}}
-    <div class="mb-3">
-        <x-nawasara-ui::time-window :window="$window" :from="$from" :to="$to" />
-    </div>
-
-    {{-- Toolbar — 2 filters (Status + Metode) + search + export. --}}
+    {{-- Toolbar — time-window + 2 filters (Status + Metode) + search + export.
+         All inline in one row so the visual hierarchy reads as a single
+         control surface. Default time window is 7 days, keeping the initial
+         query bounded for login-attempt tables that grow very large. --}}
     <div class="space-y-2 mb-4">
         <div class="flex flex-col md:flex-row md:flex-nowrap md:items-center gap-2">
             <div class="flex flex-wrap items-center gap-2 shrink-0">
+                <x-nawasara-ui::time-window :window="$window" :from="$from" :to="$to" />
+
                 <x-nawasara-ui::filter-panel
                     label="Filter"
                     :state="['statusFilter' => $statusFilter, 'methodFilter' => $methodFilter]"
