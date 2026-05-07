@@ -80,16 +80,19 @@
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm">
                         @php
-                            $badgeClass = match($item->event) {
-                                'created' => 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
-                                'updated' => 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
-                                'deleted' => 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
-                                default => 'bg-gray-100 text-gray-800 dark:bg-neutral-700 dark:text-neutral-300',
+                            // Map Spatie Activity event verbs to badge color tokens.
+                            // 'created' = success (green); 'updated' = blue category
+                            // (informational, not state); 'deleted' = danger.
+                            $eventColor = match($item->event) {
+                                'created' => 'success',
+                                'updated' => 'blue',
+                                'deleted' => 'danger',
+                                default => 'neutral',
                             };
                         @endphp
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $badgeClass }}">
+                        <x-nawasara-ui::badge :color="$eventColor">
                             {{ ucfirst($item->event ?? 'unknown') }}
-                        </span>
+                        </x-nawasara-ui::badge>
                     </td>
                     <td class="px-6 py-4 text-sm text-gray-800 dark:text-neutral-200 max-w-xs truncate">
                         {{ $item->description ?? '-' }}
