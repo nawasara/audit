@@ -7,6 +7,13 @@
         ];
     @endphp
 
+    {{-- Time-window selector row — segmented preset (Hari ini/7d/30d/Custom).
+         Sits above the main toolbar so it reads as a primary scope, not a
+         secondary filter. Default 7 days keeps initial query bounded. --}}
+    <div class="mb-3">
+        <x-nawasara-ui::time-window :window="$window" :from="$from" :to="$to" />
+    </div>
+
     {{-- Toolbar — single filter (Aksi/event) + search + export. --}}
     <div class="space-y-2 mb-4">
         <div class="flex flex-col md:flex-row md:flex-nowrap md:items-center gap-2">
@@ -98,18 +105,18 @@
             @empty
                 <tr>
                     <td colspan="6">
-                        @if ($search || ! empty($eventFilter))
+                        @if ($search || ! empty($eventFilter) || $window !== '7d' || $from || $to)
                             <x-nawasara-ui::empty-state
                                 icon="lucide-search-x"
                                 title="Tidak ada activity yang cocok"
-                                description="Coba ubah filter atau hapus search keyword."
+                                description="Coba ubah periode/filter atau hapus search keyword."
                                 variant="filter"
                                 inline />
                         @else
                             <x-nawasara-ui::empty-state
                                 icon="lucide-history"
-                                title="Belum ada activity log"
-                                description="Aktivitas user akan otomatis ter-log di sini."
+                                title="Belum ada activity 7 hari terakhir"
+                                description="Pilih periode lebih panjang atau Custom untuk melihat data lebih lama."
                                 inline />
                         @endif
                     </td>

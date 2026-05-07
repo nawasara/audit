@@ -6,11 +6,13 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use Livewire\Attributes\Computed;
 use Nawasara\Ui\Livewire\Concerns\HasExport;
+use Nawasara\Ui\Livewire\Concerns\HasTimeWindow;
 use Spatie\Activitylog\Models\Activity;
 
 class Table extends Component
 {
     use HasExport;
+    use HasTimeWindow;
     use WithPagination;
 
     public string $search = '';
@@ -42,6 +44,7 @@ class Table extends Component
     {
         return Activity::query()
             ->with('causer')
+            ->tap(fn ($q) => $this->applyTimeWindow($q, 'created_at'))
             ->when($this->search, function ($query) {
                 $query->where(function ($q) {
                     $q->where('description', 'like', "%{$this->search}%")

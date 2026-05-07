@@ -7,10 +7,12 @@ use Livewire\WithPagination;
 use Livewire\Attributes\Computed;
 use Nawasara\Audit\Models\LoginAttempt;
 use Nawasara\Ui\Livewire\Concerns\HasExport;
+use Nawasara\Ui\Livewire\Concerns\HasTimeWindow;
 
 class Table extends Component
 {
     use HasExport;
+    use HasTimeWindow;
     use WithPagination;
 
     public string $search = '';
@@ -51,6 +53,7 @@ class Table extends Component
     {
         return LoginAttempt::query()
             ->with('user')
+            ->tap(fn ($q) => $this->applyTimeWindow($q, 'created_at'))
             ->search($this->search)
             ->when(! empty($this->statusFilter), fn ($q) => $q->whereIn('status', $this->statusFilter))
             ->when(! empty($this->methodFilter), fn ($q) => $q->whereIn('method', $this->methodFilter))
