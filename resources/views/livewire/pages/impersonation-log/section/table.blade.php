@@ -1,6 +1,6 @@
 <div>
     @php
-        $typeOptions = ['webmail' => 'Webmail', 'cpanel' => 'cPanel'];
+        $typeOptions = ['webmail' => 'Webmail', 'cpanel' => 'cPanel', 'teleport' => 'Teleport SSH'];
         $statusOptions = ['issued' => 'Issued', 'failed' => 'Failed', 'rejected' => 'Rejected'];
     @endphp
 
@@ -130,9 +130,13 @@
                             <x-nawasara-ui::badge color="info">
                                 <x-lucide-mail class="size-3 inline" /> Webmail
                             </x-nawasara-ui::badge>
-                        @else
+                        @elseif ($row->type === 'cpanel')
                             <x-nawasara-ui::badge color="warning">
                                 <x-lucide-server class="size-3 inline" /> cPanel
+                            </x-nawasara-ui::badge>
+                        @elseif ($row->type === 'teleport')
+                            <x-nawasara-ui::badge color="primary">
+                                <x-lucide-terminal class="size-3 inline" /> SSH
                             </x-nawasara-ui::badge>
                         @endif
                     </td>
@@ -247,6 +251,28 @@
                             <span class="text-gray-500 dark:text-neutral-400">Instance:</span>
                             <span class="font-mono font-medium">{{ $d->instance ?? '-' }}</span>
                         </div>
+                    @endif
+                    @if ($d->type === 'teleport')
+                        <div>
+                            <span class="text-gray-500 dark:text-neutral-400">Node:</span>
+                            <span class="font-mono font-medium">{{ $d->node ?? '-' }}</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-500 dark:text-neutral-400">OS Login:</span>
+                            <span class="font-mono font-medium">{{ $d->login ?? '-' }}</span>
+                        </div>
+                        @if ($d->ticket_id ?? null)
+                            <div class="col-span-2">
+                                <span class="text-gray-500 dark:text-neutral-400">Ticket ID:</span>
+                                <span class="font-mono text-xs">{{ $d->ticket_id }}</span>
+                            </div>
+                        @endif
+                        @if ($d->duration_seconds ?? null)
+                            <div>
+                                <span class="text-gray-500 dark:text-neutral-400">Duration:</span>
+                                <span class="font-medium">{{ $d->duration_seconds }}s</span>
+                            </div>
+                        @endif
                     @endif
                     <div>
                         <span class="text-gray-500 dark:text-neutral-400">IP:</span>

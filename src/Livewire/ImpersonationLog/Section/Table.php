@@ -96,17 +96,18 @@ class Table extends Component
     {
         $hasWebmail = Schema::hasTable('nawasara_webmail_sessions');
         $hasCpanel = Schema::hasTable('nawasara_cpanel_sessions');
+        $hasTeleport = Schema::hasTable('nawasara_teleport_sessions');
 
-        // Type filter — kalau user pilih cuma satu jenis, skip query lain
+        // Type filter — kalau user pilih jenis tertentu, skip query lain
         // entirely. Performance optimization untuk large dataset.
         $wantWebmail = $hasWebmail && (empty($this->typeFilter) || in_array('webmail', $this->typeFilter, true));
         $wantCpanel = $hasCpanel && (empty($this->typeFilter) || in_array('cpanel', $this->typeFilter, true));
+        $wantTeleport = $hasTeleport && (empty($this->typeFilter) || in_array('teleport', $this->typeFilter, true));
 
-        $webmailQ = null;
-        $cpanelQ = null;
+        $sources = [];
 
         if ($wantWebmail) {
-            $webmailQ = DB::table('nawasara_webmail_sessions')
+            $sources[] = DB::table('nawasara_webmail_sessions')
                 ->select(
                     DB::raw("'webmail' as type"),
                     'id',
@@ -125,7 +126,7 @@ class Table extends Component
         }
 
         if ($wantCpanel) {
-            $cpanelQ = DB::table('nawasara_cpanel_sessions')
+            $sources[] = DB::table('nawasara_cpanel_sessions')
                 ->select(
                     DB::raw("'cpanel' as type"),
                     'id',
@@ -140,26 +141,43 @@ class Table extends Component
                 );
         }
 
-        // Resolve final query: union kalau dua-duanya ada, single kalau
-        // satu, atau dummy empty kalau dua-duanya skip (mis. fresh install
-        // tanpa whm package).
-        if ($webmailQ && $cpanelQ) {
-            $base = DB::table(
-                DB::raw("({$webmailQ->toSql()} UNION ALL {$cpanelQ->toSql()}) as sessions")
-            )
-                ->mergeBindings($webmailQ)
-                ->mergeBindings($cpanelQ);
-        } elseif ($webmailQ) {
-            $base = DB::table(DB::raw("({$webmailQ->toSql()}) as sessions"))
-                ->mergeBindings($webmailQ);
-        } elseif ($cpanelQ) {
-            $base = DB::table(DB::raw("({$cpanelQ->toSql()}) as sessions"))
-                ->mergeBindings($cpanelQ);
-        } else {
+        if ($wantTeleport) {
+            $sources[] = DB::table('nawasara_teleport_sessions')
+                ->select(
+                    DB::raw("'teleport' as type"),
+                    'id',
+                    'acted_by_user_id',
+                    // target di Teleport = combo user@node (mis. "alice@Server-Wazuh")
+                    // Lebih informatif di tabel daripada cuma node atau cuma user.
+                    DB::raw("CONCAT(target_user, '@', node) as target"),
+                    DB::raw('node as instance'),
+                    'reason',
+                    'status',
+                    'ip',
+                    'user_agent',
+                    'created_at',
+                );
+        }
+
+        // Resolve final query: handle 0/1/2/3 source kombinasi via UNION ALL
+        // berturut-turut. Wrap di subquery supaya outer base bisa apply
+        // common filters (time window, search, status) sekali saja.
+        if (empty($sources)) {
             // No source available — return query yang akan match nothing.
-            // Pakai unioned of selected zero rows lebih aman dari throw
-            // exception (page tetap render dengan empty state).
+            // Page tetap loadable dengan empty state.
             $base = DB::table(DB::raw("(SELECT NULL as type, NULL as id, NULL as acted_by_user_id, NULL as target, NULL as instance, NULL as reason, NULL as status, NULL as ip, NULL as user_agent, NULL as created_at WHERE 1=0) as sessions"));
+        } elseif (count($sources) === 1) {
+            $q = $sources[0];
+            $base = DB::table(DB::raw("({$q->toSql()}) as sessions"))
+                ->mergeBindings($q);
+        } else {
+            // 2+ sources — concat dengan UNION ALL.
+            $sqlParts = array_map(fn ($q) => $q->toSql(), $sources);
+            $unionSql = implode(' UNION ALL ', $sqlParts);
+            $base = DB::table(DB::raw("({$unionSql}) as sessions"));
+            foreach ($sources as $q) {
+                $base->mergeBindings($q);
+            }
         }
 
         // Common filters di luar union — applied to wrapper query.
@@ -277,13 +295,15 @@ class Table extends Component
     /**
      * List admin (user) yang pernah lakukan impersonation, untuk dropdown
      * filter "By Admin". Pre-resolve dari distinct acted_by_user_id di
-     * dua tabel, supaya filter cuma show user yang relevan.
+     * 3 tabel (webmail/cpanel/teleport), supaya filter cuma show user
+     * yang relevan.
      */
     #[Computed]
     public function actorOptions(): array
     {
         $hasWebmail = Schema::hasTable('nawasara_webmail_sessions');
         $hasCpanel = Schema::hasTable('nawasara_cpanel_sessions');
+        $hasTeleport = Schema::hasTable('nawasara_teleport_sessions');
 
         $ids = collect();
 
@@ -299,6 +319,14 @@ class Table extends Component
         if ($hasCpanel) {
             $ids = $ids->merge(
                 DB::table('nawasara_cpanel_sessions')
+                    ->whereNotNull('acted_by_user_id')
+                    ->distinct()
+                    ->pluck('acted_by_user_id'),
+            );
+        }
+        if ($hasTeleport) {
+            $ids = $ids->merge(
+                DB::table('nawasara_teleport_sessions')
                     ->whereNotNull('acted_by_user_id')
                     ->distinct()
                     ->pluck('acted_by_user_id'),
@@ -328,6 +356,7 @@ class Table extends Component
         $table = match ($this->detailType) {
             'webmail' => 'nawasara_webmail_sessions',
             'cpanel' => 'nawasara_cpanel_sessions',
+            'teleport' => 'nawasara_teleport_sessions',
             default => null,
         };
 
@@ -338,15 +367,22 @@ class Table extends Component
 
         // Normalize ke shape yang sama dengan UNION rows untuk view consistency
         $row->type = $this->detailType;
-        $row->target = $this->detailType === 'webmail'
-            ? ($row->email_account ?? '-')
-            : ($row->cpanel_user ?? '-');
+        $row->target = match ($this->detailType) {
+            'webmail' => $row->email_account ?? '-',
+            'cpanel' => $row->cpanel_user ?? '-',
+            'teleport' => ($row->target_user ?? '?').'@'.($row->node ?? '?'),
+            default => '-',
+        };
         $row->actor = $row->acted_by_user_id ? User::find($row->acted_by_user_id) : null;
 
-        // For webmail row, resolve target user (kalau email ke-link ke user)
+        // Webmail row mungkin punya target_user_id (mailbox owner)
         if ($this->detailType === 'webmail' && ($row->user_id ?? null)) {
             $row->target_user = User::find($row->user_id);
         }
+
+        // Teleport row punya extra fields untuk display: node, login,
+        // ticket_id, duration_seconds. Sudah ada di $row from select *,
+        // tinggal view yang baca.
 
         return $row;
     }
