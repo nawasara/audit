@@ -23,6 +23,13 @@ return [
                 'permission' => 'audit.login.view',
                 'navigate' => true,
             ],
+            [
+                'label' => 'Impersonation Log',
+                'icon' => 'lucide-user-cog',
+                'url' => url($prefix.'/impersonation-log'),
+                'permission' => 'audit.impersonation.view',
+                'navigate' => true,
+            ],
         ],
     ],
 ];

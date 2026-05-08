@@ -16,6 +16,11 @@ class PermissionSeeder extends Seeder
             'audit.log.export',
             'audit.login.view',
             'audit.settings.manage',
+
+            // Impersonation log (admin launch-as audit). Sensitive — terpisah
+            // dari audit.log.view supaya bisa di-grant ke role tertentu
+            // (mis. atasan/auditor) tanpa kasih full audit access.
+            'audit.impersonation.view',
         ];
 
         foreach ($permissions as $permission) {
