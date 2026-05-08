@@ -185,6 +185,66 @@ class Table extends Component
         return $base;
     }
 
+    /**
+     * Summary aggregates untuk hero stats di top page. Dihitung dari query
+     * yang APPLY time window + type filter + actor filter + search, tapi
+     * STRIP status filter — supaya cards "Issued/Failed" tetap reflect
+     * total absolut di context aktif, bukan ke-double-filter dengan
+     * status-yang-sedang-aktif.
+     *
+     * Pattern serupa dengan zone-health page: stat cards = clickable filter
+     * untuk status. User klik "Failed" → set statusFilter=['failed'] → table
+     * narrow ke failed only, tapi cards tetap show total + per-status count.
+     */
+    #[Computed]
+    public function summary(): array
+    {
+        // Build query SAMA dengan baseQuery() tapi tanpa statusFilter.
+        // Approach: temporary stash + restore $this->statusFilter, atau
+        // panggil baseQuery + cabut where status di runtime. Cara cleanest
+        // adalah duplicate logic — sedikit duplication acceptable untuk
+        // single-purpose method.
+        $stashedStatus = $this->statusFilter;
+        $this->statusFilter = [];
+        try {
+            $q = $this->baseQuery();
+            $total = (clone $q)->count();
+            $issued = (clone $q)->where('status', 'issued')->count();
+            $failed = (clone $q)->where('status', 'failed')->count();
+            $rejected = (clone $q)->where('status', 'rejected')->count();
+        } finally {
+            $this->statusFilter = $stashedStatus;
+        }
+
+        return [
+            'total' => $total,
+            'issued' => $issued,
+            'failed' => $failed,
+            'rejected' => $rejected,
+        ];
+    }
+
+    /**
+     * Toggle status filter dari stat card click. Kalau sudah aktif (1
+     * value match), klik lagi reset. Kalau belum aktif, replace filter
+     * dengan exclusive single-status.
+     */
+    public function toggleStatusFilter(string $status): void
+    {
+        if ($this->statusFilter === [$status]) {
+            $this->statusFilter = [];
+        } else {
+            $this->statusFilter = [$status];
+        }
+        $this->resetPage();
+    }
+
+    public function clearStatusFilter(): void
+    {
+        $this->statusFilter = [];
+        $this->resetPage();
+    }
+
     #[Computed]
     public function items()
     {

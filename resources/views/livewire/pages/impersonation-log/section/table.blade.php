@@ -14,6 +14,49 @@
         <x-nawasara-ui::time-window :window="$window" :from="$from" :to="$to" />
     </x-nawasara-ui::page-header>
 
+    {{-- Hero stats — clickable filter cards untuk status, mengikuti pattern
+         zone-health page. Total card = clear status filter. Card lain klik
+         untuk toggle status filter (klik kedua = reset). Active state ring
+         signal filter aktif. accent border-left kasih hierarchy visual. --}}
+    @php $summary = $this->summary; @endphp
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <x-nawasara-ui::stat-card
+            label="Total Event"
+            :value="number_format($summary['total'])"
+            icon="lucide-shield-check"
+            color="primary"
+            :active="empty($statusFilter)"
+            accent
+            wire:click="clearStatusFilter" />
+
+        <x-nawasara-ui::stat-card
+            label="Issued"
+            :value="number_format($summary['issued'])"
+            icon="lucide-circle-check"
+            color="success"
+            :active="$statusFilter === ['issued']"
+            accent
+            wire:click="toggleStatusFilter('issued')" />
+
+        <x-nawasara-ui::stat-card
+            label="Failed"
+            :value="number_format($summary['failed'])"
+            icon="lucide-circle-x"
+            color="danger"
+            :active="$statusFilter === ['failed']"
+            accent
+            wire:click="toggleStatusFilter('failed')" />
+
+        <x-nawasara-ui::stat-card
+            label="Rejected"
+            :value="number_format($summary['rejected'])"
+            icon="lucide-ban"
+            color="neutral"
+            :active="$statusFilter === ['rejected']"
+            accent
+            wire:click="toggleStatusFilter('rejected')" />
+    </div>
+
     {{-- Toolbar — Filter (Type + Status + Actor) + search + export. --}}
     <div class="space-y-2 mb-4">
         <div class="flex flex-col md:flex-row md:flex-nowrap md:items-center gap-2">
@@ -52,9 +95,22 @@
 
         <div wire:ignore data-filter-chips></div>
 
-        @if ($search)
+        {{-- Manual chips untuk filter yang DI LUAR filter-panel:
+             - Search input (text) — pakai filter-chip dengan model="search"
+             - Actor dropdown (single select) — set "" untuk reset
+
+             Filter-panel chips (Type, Status) sudah otomatis di-teleport
+             ke <div data-filter-chips> di atas. --}}
+        @if ($search || $actorFilter)
             <div class="flex flex-wrap items-center gap-2">
-                <x-nawasara-ui::filter-chip label="Cari: {{ $search }}" model="search" />
+                @if ($search)
+                    <x-nawasara-ui::filter-chip label="Cari: {{ $search }}" model="search" />
+                @endif
+                @if ($actorFilter && isset($this->actorOptions[$actorFilter]))
+                    <x-nawasara-ui::filter-chip
+                        label="Admin: {{ $this->actorOptions[$actorFilter] }}"
+                        model="actorFilter" />
+                @endif
             </div>
         @endif
     </div>
