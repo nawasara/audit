@@ -225,17 +225,22 @@
                             @endif
                         </span>
                     </div>
+                    {{-- Konvensi color (mirror style "Alasan akses" di bawah):
+                         Label: text-gray-500 / dark:text-neutral-400 (muted)
+                         Value: text-gray-900 / dark:text-neutral-100 (high contrast)
+                         Tanpa explicit value color, dark mode bikin label & value
+                         sama-sama keliatan abu — hard to scan. --}}
                     <div>
                         <span class="text-gray-500 dark:text-neutral-400">Waktu:</span>
-                        <span class="font-medium">{{ \Carbon\Carbon::parse($d->created_at)->format('d M Y H:i:s') }}</span>
+                        <span class="font-medium text-gray-900 dark:text-neutral-100">{{ \Carbon\Carbon::parse($d->created_at)->format('d M Y H:i:s') }}</span>
                     </div>
                     <div>
                         <span class="text-gray-500 dark:text-neutral-400">Admin:</span>
-                        <span class="font-medium">{{ $d->actor?->name ?? '#'.($d->acted_by_user_id ?? '?') }}</span>
+                        <span class="font-medium text-gray-900 dark:text-neutral-100">{{ $d->actor?->name ?? '#'.($d->acted_by_user_id ?? '?') }}</span>
                     </div>
                     <div class="col-span-2">
                         <span class="text-gray-500 dark:text-neutral-400">Target:</span>
-                        <span class="font-mono font-medium">{{ $d->target }}</span>
+                        <span class="font-mono font-medium text-gray-900 dark:text-neutral-100">{{ $d->target }}</span>
                         @if ($d->type === 'webmail' && isset($d->target_user))
                             <span class="text-xs text-gray-500 dark:text-neutral-400">
                                 (linked to user: {{ $d->target_user->name }})
@@ -245,38 +250,38 @@
                     @if ($d->type === 'cpanel')
                         <div>
                             <span class="text-gray-500 dark:text-neutral-400">Domain:</span>
-                            <span class="font-medium">{{ $d->domain ?? '-' }}</span>
+                            <span class="font-medium text-gray-900 dark:text-neutral-100">{{ $d->domain ?? '-' }}</span>
                         </div>
                         <div>
                             <span class="text-gray-500 dark:text-neutral-400">Instance:</span>
-                            <span class="font-mono font-medium">{{ $d->instance ?? '-' }}</span>
+                            <span class="font-mono font-medium text-gray-900 dark:text-neutral-100">{{ $d->instance ?? '-' }}</span>
                         </div>
                     @endif
                     @if ($d->type === 'teleport')
                         <div>
                             <span class="text-gray-500 dark:text-neutral-400">Node:</span>
-                            <span class="font-mono font-medium">{{ $d->node ?? '-' }}</span>
+                            <span class="font-mono font-medium text-emerald-700 dark:text-emerald-400">{{ $d->node ?? '-' }}</span>
                         </div>
                         <div>
                             <span class="text-gray-500 dark:text-neutral-400">OS Login:</span>
-                            <span class="font-mono font-medium">{{ $d->login ?? '-' }}</span>
+                            <span class="font-mono font-medium text-gray-900 dark:text-neutral-100">{{ $d->login ?? '-' }}</span>
                         </div>
                         @if ($d->ticket_id ?? null)
                             <div class="col-span-2">
                                 <span class="text-gray-500 dark:text-neutral-400">Ticket ID:</span>
-                                <span class="font-mono text-xs">{{ $d->ticket_id }}</span>
+                                <span class="font-mono text-xs text-gray-700 dark:text-neutral-300">{{ $d->ticket_id }}</span>
                             </div>
                         @endif
                         @if ($d->duration_seconds ?? null)
                             <div>
                                 <span class="text-gray-500 dark:text-neutral-400">Duration:</span>
-                                <span class="font-medium">{{ $d->duration_seconds }}s</span>
+                                <span class="font-medium text-gray-900 dark:text-neutral-100">{{ $d->duration_seconds }}s</span>
                             </div>
                         @endif
                     @endif
                     <div>
                         <span class="text-gray-500 dark:text-neutral-400">IP:</span>
-                        <span class="font-mono font-medium">{{ $d->ip ?? '-' }}</span>
+                        <span class="font-mono font-medium text-gray-900 dark:text-neutral-100">{{ $d->ip ?? '-' }}</span>
                     </div>
                 </div>
 
