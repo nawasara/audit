@@ -4,8 +4,9 @@ $prefix = 'nawasara-audit';
 
 return [
     [
-        'label' => 'Audit Trail',
+        'label' => 'Audit',
         'icon' => 'lucide-shield-check',
+        'group' => 'Keamanan',
         'url' => '',
         'permission' => 'audit.log.view',
         'submenu' => [
