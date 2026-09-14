@@ -4,10 +4,10 @@ Audit trail, activity logging, and login attempt tracking for the Nawasara super
 
 ## Features
 
-- **Activity log** — every significant write action (model create/update/delete) is recorded with the user, timestamp, and field-level diff using `spatie/laravel-activitylog`.
-- **Login history** — successful and failed authentication attempts are persisted, including IP address, user agent, and outcome.
-- **Admin viewer** — Livewire pages to browse, filter, and inspect activity log entries and login attempts without leaving Nawasara.
-- **Permission-gated** — viewing the audit pages requires Spatie permissions seeded by the package.
+- **Activity log.** Every significant write action (model create/update/delete) is recorded with the user, timestamp, and field-level diff using `spatie/laravel-activitylog`.
+- **Login history.** Successful and failed authentication attempts are persisted, including IP address, user agent, and outcome.
+- **Admin viewer.** Livewire pages to browse, filter, and inspect activity log entries and login attempts without leaving Nawasara.
+- **Permission-gated.** Viewing the audit pages requires Spatie permissions seeded by the package.
 
 ## Installation
 
