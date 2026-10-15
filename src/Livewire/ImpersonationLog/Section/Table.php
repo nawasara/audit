@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Url;
+use Illuminate\Support\Facades\Gate;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Nawasara\Ui\Livewire\Concerns\HasArrayFilters;
@@ -39,6 +40,16 @@ class Table extends Component
     use HasExport;
     use HasTimeWindow;
     use WithPagination;
+
+    /**
+     * Dijalankan di SETIAP permintaan Livewire (mount dan update), bukan hanya
+     * saat halaman dibuka: middleware route tidak berjalan pada update, dan
+     * export memuat data pribadi (audit keamanan 15 Oktober 2026).
+     */
+    public function boot(): void
+    {
+        Gate::authorize('audit.impersonation.view');
+    }
 
     #[Url]
     public string $search = '';

@@ -2,6 +2,7 @@
 
 namespace Nawasara\Audit\Livewire\ActivityLog\Section;
 
+use Illuminate\Support\Facades\Gate;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Livewire\Attributes\Computed;
@@ -14,6 +15,16 @@ class Table extends Component
     use HasExport;
     use HasTimeWindow;
     use WithPagination;
+
+    /**
+     * Dijalankan di SETIAP permintaan Livewire (mount dan update), bukan hanya
+     * saat halaman dibuka: middleware route tidak berjalan pada update, dan
+     * export memuat data pribadi (audit keamanan 15 Oktober 2026).
+     */
+    public function boot(): void
+    {
+        Gate::authorize('audit.log.view');
+    }
 
     public string $search = '';
 
