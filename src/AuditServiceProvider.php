@@ -9,6 +9,9 @@ use Illuminate\Auth\Events\Failed;
 use Symfony\Component\Finder\Finder;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Console\Scheduling\Schedule;
+use Illuminate\Support\Facades\Artisan;
+use Nawasara\Audit\Console\Commands\PruneAuditLogsCommand;
 use Nawasara\Audit\Listeners\LogFailedLogin;
 use Nawasara\Audit\Listeners\LogSuccessfulLogin;
 
@@ -23,6 +26,36 @@ class AuditServiceProvider extends ServiceProvider
         $this->registerLivewire();
         $this->registerEventListeners();
         $this->offerPublishing();
+        $this->registerPrune();
+    }
+
+    /**
+     * The prune command, plus its nightly schedule when enabled.
+     *
+     * Scheduled with $schedule->call() rather than ->command(): commands
+     * registered by a package do not reliably reach the Artisan kernel when
+     * the scheduler boots (AGENTS.md §7).
+     */
+    protected function registerPrune(): void
+    {
+        if (! $this->app->runningInConsole()) {
+            return;
+        }
+
+        $this->commands([PruneAuditLogsCommand::class]);
+
+        $this->app->booted(function () {
+            if (! config('nawasara-audit.prune.enabled', false)) {
+                return;
+            }
+
+            $this->app->make(Schedule::class)
+                ->call(fn () => Artisan::call('nawasara-audit:prune'))
+                ->name('nawasara-audit:prune')
+                ->dailyAt((string) config('nawasara-audit.prune.at', '02:30'))
+                ->timezone('Asia/Jakarta')
+                ->withoutOverlapping(60);
+        });
     }
 
     public function register(): void
